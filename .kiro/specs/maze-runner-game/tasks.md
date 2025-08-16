@@ -35,14 +35,22 @@
   - Add visual styling and colors for maze elements
   - _Requirements: 6.1, 6.3_
 
-- [ ] 3. Implement player character system
-- [ ] 3.1 Create player character class and movement
+- [x] 3. Implement player character system
+
+
+
+
+- [x] 3.1 Create player character class and movement
+
+
   - Implement Player class with position and movement methods
   - Add collision detection with maze walls
   - Implement smooth character movement and animation
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 3.2 Add maze edge wrapping functionality
+- [x] 3.2 Add maze edge wrapping functionality
+
+
   - Implement logic for character wrapping at maze edges
   - Handle edge cases and ensure smooth transitions
   - Write tests for edge wrapping behavior

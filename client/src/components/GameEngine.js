@@ -107,22 +107,25 @@ export class GameEngine {
     
     // Input handling methods
     handleInput(direction) {
-        switch (direction) {
-            case 'up':
-                this.player.direction = { x: 0, y: -1 };
-                break;
-            case 'down':
-                this.player.direction = { x: 0, y: 1 };
-                break;
-            case 'left':
-                this.player.direction = { x: -1, y: 0 };
-                break;
-            case 'right':
-                this.player.direction = { x: 1, y: 0 };
-                break;
-            case 'stop':
-                this.player.direction = { x: 0, y: 0 };
-                break;
+        // Use the Player class's setDirection method for proper movement handling
+        if (this.player && this.player.setDirection) {
+            this.player.setDirection(direction);
+        } else {
+            // Fallback for direct direction setting (if Player class not used)
+            switch (direction) {
+                case 'up':
+                    this.player.direction = { x: 0, y: -1 };
+                    break;
+                case 'down':
+                    this.player.direction = { x: 0, y: 1 };
+                    break;
+                case 'left':
+                    this.player.direction = { x: -1, y: 0 };
+                    break;
+                case 'right':
+                    this.player.direction = { x: 1, y: 0 };
+                    break;
+            }
         }
     }
     

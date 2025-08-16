@@ -73,8 +73,9 @@ describe('GameEngine', () => {
         gameEngine.handleInput('right');
         expect(gameEngine.player.direction).toEqual({ x: 1, y: 0 });
         
-        gameEngine.handleInput('stop');
-        expect(gameEngine.player.direction).toEqual({ x: 0, y: 0 });
+        // Test that player continues moving (no stop command in new system)
+        // Player should maintain last direction until hitting a wall or new direction
+        expect(gameEngine.player.direction).toEqual({ x: 1, y: 0 });
     });
     
     test('should update player position based on direction', () => {

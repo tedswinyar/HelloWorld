@@ -56,26 +56,37 @@ describe('InputHandler', () => {
         expect(mockGameEngine.handleInput).toHaveBeenCalledWith('up');
     });
     
-    test('should handle key release', () => {
+    test('should handle key release without stopping', () => {
         // Press and release key
         const downEvent = new KeyboardEvent('keydown', { code: 'ArrowRight' });
         const upEvent = new KeyboardEvent('keyup', { code: 'ArrowRight' });
         
         inputHandler.handleKeyDown(downEvent);
         expect(inputHandler.keys['ArrowRight']).toBe(true);
+        expect(mockGameEngine.handleInput).toHaveBeenCalledWith('right');
+        
+        jest.clearAllMocks();
         
         inputHandler.handleKeyUp(upEvent);
         expect(inputHandler.keys['ArrowRight']).toBe(false);
-        expect(mockGameEngine.handleInput).toHaveBeenCalledWith('stop');
+        
+        // Should not send any command on key release (continuous movement)
+        expect(mockGameEngine.handleInput).not.toHaveBeenCalled();
     });
     
-    test('should prioritize single direction input', () => {
-        // Press multiple keys
+    test('should not send commands for conflicting keys', () => {
+        // Press multiple conflicting keys
         inputHandler.keys['ArrowUp'] = true;
         inputHandler.keys['ArrowDown'] = true;
         inputHandler.updatePlayerDirection();
         
-        // Should not move when conflicting keys are pressed
-        expect(mockGameEngine.handleInput).toHaveBeenCalledWith('stop');
+        // Should not send any command when conflicting keys are pressed
+        expect(mockGameEngine.handleInput).not.toHaveBeenCalled();
+        
+        // Release one key, should now send command for remaining key
+        inputHandler.keys['ArrowDown'] = false;
+        inputHandler.updatePlayerDirection();
+        
+        expect(mockGameEngine.handleInput).toHaveBeenCalledWith('up');
     });
 });

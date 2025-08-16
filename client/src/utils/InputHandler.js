@@ -2,6 +2,7 @@ export class InputHandler {
     constructor(gameEngine) {
         this.gameEngine = gameEngine;
         this.keys = {};
+        this.lastDirection = null; // Track last sent direction to avoid duplicates
         
         // Bind event listeners
         this.handleKeyDown = this.handleKeyDown.bind(this);
@@ -45,18 +46,29 @@ export class InputHandler {
         const right = this.keys['ArrowRight'] || this.keys['KeyD'];
         
         // Determine direction based on pressed keys
-        // Prioritize most recent input by checking combinations
+        // Only change direction when a key is pressed, don't stop on key release
+        // This creates continuous movement like classic Pac-Man
+        let newDirection = null;
+        
         if (up && !down) {
-            this.gameEngine.handleInput('up');
+            newDirection = 'up';
         } else if (down && !up) {
-            this.gameEngine.handleInput('down');
+            newDirection = 'down';
         } else if (left && !right) {
-            this.gameEngine.handleInput('left');
+            newDirection = 'left';
         } else if (right && !left) {
-            this.gameEngine.handleInput('right');
-        } else {
-            // No movement keys pressed or conflicting keys
-            this.gameEngine.handleInput('stop');
+            newDirection = 'right';
+        }
+        
+        // Only send direction command if it's different from the last one
+        if (newDirection && newDirection !== this.lastDirection) {
+            this.gameEngine.handleInput(newDirection);
+            this.lastDirection = newDirection;
+        }
+        
+        // Reset lastDirection when no keys are pressed to allow re-pressing same key
+        if (!up && !down && !left && !right) {
+            this.lastDirection = null;
         }
     }
     
