@@ -87,19 +87,34 @@
   - _Requirements: 2.3, 7.3_
 
 - [ ] 5. Implement enemy AI system
-- [ ] 5.1 Create enemy character classes
+
+
+- [x] 5.1 Create enemy character classes
+
+
+
   - Implement Enemy class with position and movement
   - Add basic AI pathfinding using A* algorithm
   - Implement enemy rendering and animation
   - _Requirements: 3.1, 7.2_
 
-- [ ] 5.2 Implement enemy-player collision system
+- [x] 5.2 Implement enemy-player collision system
+
+
+
+
+
   - Add collision detection between enemies and player
   - Implement life system and game over logic
   - Handle player respawn and life management
   - _Requirements: 3.2, 3.3, 7.4_
 
-- [ ] 5.3 Add power pellet vulnerability mechanics
+- [x] 5.3 Add power pellet vulnerability mechanics
+
+
+
+
+
   - Implement enemy state changes when power pellets are collected
   - Add timer system for temporary enemy vulnerability
   - Create visual indicators for vulnerable enemies
