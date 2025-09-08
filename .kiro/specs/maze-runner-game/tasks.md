@@ -56,20 +56,31 @@
   - Write tests for edge wrapping behavior
   - _Requirements: 1.4_
 
-- [ ] 4. Implement pellet collection system
-- [ ] 4.1 Create pellet placement and rendering
+- [x] 4. Implement pellet collection system
+
+
+
+
+
+- [x] 4.1 Create pellet placement and rendering
+
+
   - Generate pellet positions throughout accessible maze areas
   - Implement pellet rendering on the game canvas
   - Create different pellet types (normal and power pellets)
   - _Requirements: 2.1, 2.4, 8.3_
 
-- [ ] 4.2 Implement pellet collection mechanics
+- [x] 4.2 Implement pellet collection mechanics
+
+
   - Add collision detection between player and pellets
   - Implement score tracking and display
   - Handle pellet removal and score updates
   - _Requirements: 2.1, 2.2_
 
-- [ ] 4.3 Add level progression system
+- [x] 4.3 Add level progression system
+
+
   - Implement logic to detect when all pellets are collected
   - Generate new maze when level is completed
   - Increase difficulty and adjust game parameters
