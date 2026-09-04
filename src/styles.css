@@ -1,0 +1,166 @@
+:root {
+  --ink: #f2f2f7;
+  --ink-dim: #8a8aa3;
+  --accent: #ffe000;
+  --surface: #07070f;
+  --surface-raised: #12121f;
+  --border: #24243a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: grid;
+  place-items: center;
+  /* Swipes are game input, not page scrolling. */
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+#shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  max-width: 1400px;
+  padding: clamp(0.5rem, 2vmin, 1.25rem);
+}
+
+/*
+ * The HUD sits above the board rather than floating over it. In the 2025 build
+ * it was absolutely positioned across the top-left of the canvas, so it covered
+ * the corner of the maze the player spawned in.
+ */
+#hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(0.75rem, 3vmin, 2rem);
+  padding: 0.6rem 1rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  flex: 0 0 auto;
+}
+
+/*
+ * `:not([hidden])` matters. The `hidden` attribute is only `display: none` in the
+ * UA stylesheet, so a bare `display: flex` here outranks it and would leave the
+ * power meter on screen permanently — which is exactly what the Playwright suite
+ * caught.
+ */
+.hud-group:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 3.5rem;
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.hud-value {
+  font-size: clamp(1rem, 2.4vmin, 1.4rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.hud-lives {
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  min-height: 1.2em;
+}
+
+.hud-power .hud-value {
+  color: #7dff9b;
+}
+
+.hud-power[data-expiring="true"] .hud-value {
+  color: #ff6b6b;
+}
+
+#stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+/*
+ * The canvas backing store is sized to the maze in device pixels; here it is
+ * scaled to fit whatever space is left, preserving its aspect ratio, so the
+ * whole board is always visible and the player is never a speck.
+ */
+#board {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  width: auto;
+  background: #000;
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+#help {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+  flex: 0 0 auto;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0.1em 0.35em;
+  margin: 0 0.08em;
+  font: inherit;
+  font-size: 0.9em;
+  text-align: center;
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 0.3rem;
+}
+
+.fallback {
+  padding: 2rem;
+  text-align: center;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #board {
+    /* Nothing to disable in CSS; the game itself is the motion. Kept as a hook. */
+    transition: none;
+  }
+}
+
+@media (max-width: 30rem) {
+  #help {
+    display: none;
+  }
+}

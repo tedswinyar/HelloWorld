@@ -1,67 +1,67 @@
 # Project Structure
 
-## Directory Organization
+## Directory organisation
 
 ```
 /
-├── client/                 # Frontend game client
-│   ├── src/
-│   │   ├── components/     # Game components
-│   │   │   ├── GameEngine.js
-│   │   │   ├── MazeGenerator.js
-│   │   │   ├── Player.js
-│   │   │   ├── Enemy.js
-│   │   │   └── AIController.js
-│   │   ├── multiplayer/    # Multiplayer functionality
-│   │   │   └── MultiplayerClient.js
-│   │   ├── modes/          # Genre-breaking modes
-│   │   ├── utils/          # Utility functions
-│   │   └── main.js         # Entry point
-│   ├── assets/             # Game assets (images, sounds)
-│   ├── styles/             # CSS files
-│   └── index.html          # Main HTML file
-├── server/                 # AWS Lambda functions
-│   ├── handlers/           # Lambda function handlers
-│   │   ├── connectionHandler.js
-│   │   ├── gameStateManager.js
-│   │   └── genreModeController.js
-│   ├── models/             # Data models
-│   ├── utils/              # Server utilities
-│   └── tests/              # Server-side tests
-├── infrastructure/         # AWS infrastructure as code
-│   ├── cloudformation/     # CloudFormation templates
-│   └── scripts/            # Deployment scripts
-├── tests/                  # Client-side tests
-│   ├── unit/               # Unit tests
-│   ├── integration/        # Integration tests
-│   └── e2e/                # End-to-end tests
-└── docs/                   # Documentation
+├── index.html               # Vite entry point
+├── src/
+│   ├── core/                # Simulation. No DOM, no canvas, no timers.
+│   │   ├── coords.ts        # Tile / world / screen spaces and conversions
+│   │   ├── direction.ts     # The four directions
+│   │   ├── maze.ts          # The board as a torus
+│   │   ├── mazeGenerator.ts # Recursive backtracking, then braiding
+│   │   ├── gridMover.ts     # Tile-to-tile movement with turn buffering
+│   │   ├── pathfinding.ts   # A* and BFS over the tile graph
+│   │   ├── spawns.ts        # Spawn placement with guaranteed separation
+│   │   ├── pellets.ts       # Pellets, collected by occupying a tile
+│   │   ├── player.ts        # Player actor
+│   │   ├── enemy.ts         # Enemy actors and behaviours
+│   │   ├── difficulty.ts    # Level curve, as pure functions
+│   │   └── game.ts          # Rules, phases, scoring, lives
+│   ├── render/
+│   │   └── renderer.ts      # Canvas drawing
+│   ├── loop.ts              # Fixed-timestep loop
+│   ├── input.ts             # Keyboard and touch
+│   ├── hud.ts               # DOM mirror of game state
+│   ├── highScore.ts         # localStorage, guarded
+│   ├── main.ts              # Wiring
+│   └── styles.css
+├── tests/                   # Vitest
+│   └── helpers/
+│       ├── maze.ts          # ASCII-art maze builder
+│       └── bot.ts           # A bot that plays the game
+├── e2e/                     # Playwright
+├── docs/decisions/          # Why the core was rebuilt
+└── .kiro/
+    ├── specs/               # The 2025 spec-driven-development artefacts
+    └── steering/            # These files
 ```
 
-## File Naming Conventions
+## Naming conventions
 
-- **JavaScript files**: PascalCase for classes (`GameEngine.js`), camelCase for utilities (`gameUtils.js`)
-- **CSS files**: kebab-case (`game-styles.css`)
-- **HTML files**: lowercase (`index.html`)
-- **Test files**: `*.test.js` or `*.spec.js`
+- **TypeScript modules**: camelCase filenames (`gridMover.ts`), even when the main
+  export is a class. Classes themselves are PascalCase.
+- **Tests**: `*.test.ts` under `tests/`, `*.spec.ts` under `e2e/`.
+- **CSS**: kebab-case class names.
 
-## Code Organization Principles
+## Code organisation principles
 
-- **Component-based architecture** - Each game component is a separate module
-- **Separation of concerns** - Client, server, and infrastructure code in separate directories
-- **Modular design** - Small, focused modules with clear responsibilities
-- **Test co-location** - Tests organized by functionality, not file type
+- **Simulation / presentation split.** The boundary is `src/core/`. Anything in
+  there that reaches for `document`, `window` or a timer is a bug.
+- **Total functions over guards.** `cellAt` wraps rather than returning undefined;
+  `step` always yields a real tile. Callers should not need null checks.
+- **Pure functions for tuning.** The difficulty curve is a set of pure functions of
+  the level number so its invariants can be asserted for every level, not only the
+  ones a test can reach by playing.
+- **State machine for game flow.** `ready → playing → dying → ready`, plus
+  `levelComplete` and `gameOver`. Phase transitions are driven by a timer the
+  simulation owns, never by `setTimeout`.
+- **Events for things state cannot express.** `Game.events` is drained by the
+  presentation layer each frame; the HUD reads state directly.
 
-## Key Architectural Patterns
+## Import/export standards
 
-- **MVC pattern** - Model (game state), View (canvas rendering), Controller (input handling)
-- **Observer pattern** - Event-driven communication between game components
-- **State machine** - Game modes and states managed through clear state transitions
-- **Factory pattern** - Enemy and mode creation through factory functions
-
-## Import/Export Standards
-
-- Use ES6 modules (`import`/`export`)
-- Prefer named exports for utilities, default exports for main classes
-- Group imports: external libraries first, then internal modules
-- Use relative paths for local imports, absolute for external dependencies
+- ES modules, named exports throughout, no default exports.
+- `import type` for type-only imports (`verbatimModuleSyntax` is on).
+- Biome sorts imports; run `npm run lint:fix` rather than ordering by hand.
