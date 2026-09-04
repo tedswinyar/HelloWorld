@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="A browser-based maze runner game: collect the pellets, dodge the ghosts."
+    />
+    <title>Maze Runner</title>
+  </head>
+  <body>
+    <div id="shell">
+      <header id="hud">
+        <div class="hud-group">
+          <span class="hud-label">Score</span>
+          <strong class="hud-value" data-hud="score">0</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Best</span>
+          <strong class="hud-value" data-hud="high-score">0</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Level</span>
+          <strong class="hud-value" data-hud="level">1</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Lives</span>
+          <strong class="hud-value hud-lives" data-hud="lives">●●●</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Pellets</span>
+          <strong class="hud-value" data-hud="pellets">0</strong>
+        </div>
+        <div class="hud-group hud-power" data-hud="power" hidden>
+          <span class="hud-label">Power</span>
+          <strong class="hud-value" data-hud="power-bar">0s</strong>
+        </div>
+      </header>
+
+      <main id="stage">
+        <canvas id="board" aria-label="Maze runner game board"></canvas>
+      </main>
+
+      <footer id="help">
+        <span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move</span>
+        <span><kbd>Space</kbd> to restart · swipe on touch devices</span>
+      </footer>
+    </div>
+
+    <noscript>
+      <p class="fallback">Maze Runner needs JavaScript and an HTML5 canvas to run.</p>
+    </noscript>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

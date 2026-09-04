@@ -1,189 +1,141 @@
-# Maze Runner Game
+# Maze Runner
 
-A browser-based multiplayer maze runner game that combines classic Pac-Man mechanics with modern multiplayer features and innovative genre-breaking modes.
-
-## Learning Objectives
-
-This project serves as a comprehensive learning exercise for **spec-driven development using Kiro**, demonstrating how to:
-
-- Transform a rough feature idea into detailed requirements using EARS format
-- Create comprehensive design documents with architecture and component specifications
-- Break down complex features into actionable implementation tasks
-- Use Kiro's spec workflow to systematically develop features from concept to completion
-- Apply iterative development practices with clear documentation and task tracking
-
-The project follows Kiro's spec-driven methodology, moving through requirements gathering, design documentation, and task-based implementation to showcase best practices for structured software development.
-
-### Spec-Driven Development Workflow
-
-1. **Requirements Phase** - Define user stories and acceptance criteria in EARS format
-2. **Design Phase** - Create detailed technical design with architecture and data models  
-3. **Task Planning** - Break design into discrete, testable implementation tasks
-4. **Implementation** - Execute tasks incrementally with continuous testing and validation
-
-All specification documents are available in [`.kiro/specs/maze-runner-game/`](.kiro/specs/maze-runner-game/) for reference and learning.
-
-## Features
-
-- **Single-player and multiplayer modes** - Play solo against AI or compete with other players online
-- **Random maze generation** - Each game features a unique maze layout for replay value
-- **Genre-breaking modes** - Periodic gameplay variations (Speed Mode, Ghost Mode, Darkness Mode, etc.) that temporarily change game mechanics
-- **Real-time multiplayer** - WebSocket-based multiplayer with room creation and joining
-- **Cross-platform browser support** - Works on desktop and mobile browsers without installation
-
-## Technology Stack
-
-### Frontend
-- **HTML5 Canvas** - Game rendering and graphics
-- **Vanilla JavaScript** - Game logic and client-side functionality
-- **WebSocket API** - Real-time multiplayer communication
-- **CSS3** - UI styling and responsive design
-
-### Backend (AWS Serverless)
-- **AWS Lambda** - Serverless compute for game logic
-- **API Gateway WebSocket** - Managed WebSocket connections
-- **DynamoDB** - NoSQL database for game state and player data
-- **SQS** - Message queuing for genre-breaking mode coordination
-- **CloudWatch Events** - Scheduled triggers for game modes
-
-### Hosting & CDN
-- **S3** - Static website hosting
-- **CloudFront** - Global CDN for asset delivery
-
-## Project Structure
-
-```
-/
-├── client/                 # Frontend game client
-│   ├── src/
-│   │   ├── components/     # Game components
-│   │   │   ├── GameEngine.js
-│   │   │   ├── MazeGenerator.js
-│   │   │   ├── Player.js
-│   │   │   ├── Enemy.js
-│   │   │   └── AIController.js
-│   │   ├── multiplayer/    # Multiplayer functionality
-│   │   │   └── MultiplayerClient.js
-│   │   ├── modes/          # Genre-breaking modes
-│   │   ├── utils/          # Utility functions
-│   │   └── main.js         # Entry point
-│   ├── assets/             # Game assets (images, sounds)
-│   ├── styles/             # CSS files
-│   └── index.html          # Main HTML file
-├── server/                 # AWS Lambda functions
-│   ├── handlers/           # Lambda function handlers
-│   ├── models/             # Data models
-│   └── utils/              # Server utilities
-├── infrastructure/         # AWS infrastructure as code
-├── tests/                  # Client-side tests
-└── docs/                   # Documentation
-```
-
-## Getting Started
-
-### Development
+A browser-based maze runner in the Pac-Man tradition: clear the board, dodge the
+ghosts, eat a power pellet and turn the tables. TypeScript, HTML5 canvas, no
+runtime dependencies.
 
 ```bash
-# Install dependencies
 npm install
-
-# Start local development server
-npm start
-
-# Run unit tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Build for production
-npm run build
+npm run dev      # http://localhost:8080
 ```
 
-### Deployment
+Add `?seed=12345` to the URL to replay an exact board.
 
-```bash
-# Deploy AWS infrastructure
-npm run deploy:aws
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Vite dev server with hot reload |
+| `npm run build` | Typecheck, then bundle to `dist/` |
+| `npm test` | Vitest unit and simulation suite |
+| `npm run e2e` | Playwright tests against a real browser |
+| `npm run lint` | Biome lint and format check |
+| `npm run check` | Typecheck + lint + unit tests |
 
-# Deploy static assets to S3
-npm run deploy:client
+Playwright needs its browser once: `npm run e2e:install`.
 
-# Full deployment
-npm run deploy
+## Controls
+
+Arrow keys or `WASD` to move, `Space` to restart after a game over, swipe on
+touch devices.
+
+## Two projects in one repository
+
+This repo started in 2014 as five commits of README markdown practice — the
+GitHub description still says "First GitHub test project". In August 2025 it was
+rebuilt as this game, deliberately as an exercise in **spec-driven development
+with Kiro**: requirements in EARS format, a design document, then a task list
+worked through in order. Those artefacts are still in
+[`.kiro/specs/maze-runner-game/`](.kiro/specs/maze-runner-game/) and remain the
+most interesting thing about the project.
+
+In September 2026 the core was rebuilt again. The 2025 version is preserved at
+the `baseline-2025-kiro` tag, and it is worth checking out, because the
+difference between the two is a clean record of what a year of model improvement
+changes about a codebase.
+
+The 2025 build had 9,400 lines and 301 tests. It also had 30 failing tests and
+was **unplayable**: an enemy spawned 14 pixels from the player's fixed starting
+tile, inside a 16-pixel collision radius, so the first ghost ended the game about
+two seconds after load, before any key was pressed. Every game. That defect
+survived three sessions of work and 301 tests, because not one of those tests
+ever played the game.
+
+That is the lesson, and it is not really about model capability. Volume of
+plausible code and volume of passing tests are both easy; the missing piece was
+any check that the thing worked as a *game*. See
+[`docs/decisions/`](docs/decisions/) for what changed and why.
+
+## How it works
+
+The simulation is deliberately free of the DOM, canvas, and timers, so the whole
+rule set can be tested in Node at thousands of simulated seconds per second.
+
+```
+src/
+  core/            # simulation — no DOM, no canvas, no timers
+    coords.ts        tile / world / screen spaces, kept apart by field name
+    direction.ts     the four directions and their vectors
+    maze.ts          the board as a torus; wrapping falls out for free
+    mazeGenerator.ts recursive backtracking, then braided to remove dead ends
+    gridMover.ts     tile-to-tile movement with turn buffering
+    pathfinding.ts   A* and BFS over the tile graph
+    spawns.ts        spawn placement with a guaranteed player separation
+    pellets.ts       pellets, collected by occupying a tile
+    player.ts        the player actor
+    enemy.ts         enemy actors and their four behaviours
+    difficulty.ts    the level curve, as pure functions
+    game.ts          rules, phases, scoring, lives
+  render/
+    renderer.ts    # canvas drawing
+  loop.ts          # fixed-timestep loop
+  input.ts         # keyboard and touch
+  hud.ts           # DOM mirror of game state
+  highScore.ts     # localStorage, guarded
+  main.ts          # wiring
+tests/             # Vitest: unit, property and bot-driven playthroughs
+e2e/               # Playwright: real browser, real key presses
 ```
 
-## Game Mechanics
+Four ideas carry most of the weight:
 
-### Core Gameplay
-- Navigate through randomly generated mazes
-- Collect pellets to score points
-- Avoid AI-controlled enemies
-- Use power pellets for temporary advantages
-- Wrap around maze edges for strategic movement
+**Actors live on the maze graph.** An actor is at a tile with an offset toward
+the next one, so "can I move here" is a single wall lookup, and being wedged
+inside geometry is not representable. The 2025 build let the player float at
+arbitrary pixel coordinates and tested four corners of a 16px box against 20px
+cells — 2px of clearance — then rescued the result by snapping to a cell centre.
 
-### Genre-Breaking Modes
-The game features periodic mode changes that temporarily alter gameplay:
+**The board is a torus.** Wrapping around the edges is a property of the
+coordinate space, not a special case checked every frame.
 
-Mode | Effect | Duration
---- | --- | ---
-**Speed Mode** | All characters move at double speed | 30-60s
-**Ghost Mode** | Players can pass through walls | 30-60s
-**Darkness Mode** | Limited visibility around player | 30-60s
-**Giant Mode** | Player character becomes larger | 30-60s
-**Teleport Mode** | Random teleportation events | 30-60s
-**Gravity Mode** | Pellets and players affected by gravity | 30-60s
+**The maze is braided.** Recursive backtracking gives a perfect maze: one route
+between any two tiles, dead ends everywhere. That is the wrong topology for being
+chased — the 2025 build shipped it unmodified, so an A* pursuer could corner you
+somewhere with no exit. Braiding removes every dead end, and the test suite
+asserts there are none.
 
-### Multiplayer Features
-- Real-time multiplayer with WebSocket connections
-- Room-based matchmaking
-- Individual score tracking and rankings
-- Synchronized genre-breaking modes across all players
+**Time is fixed-step.** Speed is pixels per *second* and the simulation advances
+in equal increments. The 2025 build moved a fixed number of pixels per frame, so
+it ran at double speed on a 120Hz display.
 
-## Architecture
+## Testing
 
-The game uses a serverless AWS architecture optimized for cost and scalability:
+Three layers, all of which have to pass:
 
-- **Frontend**: Static files served via S3 and CloudFront CDN
-- **Real-time Communication**: API Gateway WebSocket for low-latency multiplayer
-- **Game Logic**: AWS Lambda functions for serverless compute
-- **Data Storage**: DynamoDB for game state and player data
-- **Mode Coordination**: SQS for managing genre-breaking mode events
+- **Unit and property tests** over the simulation, including a movement spec and
+  fuzz tests asserting an actor never occupies a wall whatever the input.
+- **Bot-driven playthroughs** — a greedy pellet-seeking bot with ghost avoidance
+  plays whole levels. If the board cannot be cleared, or the ghosts become
+  unfairly fast, the bot's score stops climbing and the suite fails. This is the
+  layer the 2025 build most needed and entirely lacked.
+- **Playwright** against the built bundle, pressing real keys, asserting on both
+  the DOM and live game state. It has already earned its keep: it caught a CSS
+  bug where `.hud-group { display: flex }` outranked the `hidden` attribute and
+  left the power meter permanently on screen.
 
-## Browser Support
+## Not built
 
-- Chrome (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
-- Edge (latest 2 versions)
-- Mobile browsers (iOS Safari, Android Chrome)
+Honest status, because the previous README claimed directories that did not
+exist:
 
-## Development Status
+- **Multiplayer.** Unstarted. The original design called for API Gateway
+  WebSockets, Lambda, DynamoDB, plus SQS and CloudWatch Events purely to
+  broadcast mode changes. That is a lot of moving parts for a hobby game and
+  worth redesigning rather than inheriting.
+- **Genre-breaking modes** (Speed, Ghost, Darkness, Giant, Teleport, Gravity).
+  Unstarted. These are client-side effects and do not need a backend to exist.
+- **Audio.** None yet.
+- **Deployment.** The build output is a static bundle with a relative base, so it
+  will serve from anywhere; nothing is wired up.
 
-✅ **Task 1**: Project structure and core game foundation  
-⏳ **Task 2**: Maze generation and rendering  
-⏳ **Task 3**: Player character implementation  
-⏳ **Task 4**: Collision detection and game mechanics  
-⏳ **Task 5**: Enemy AI and pathfinding  
-⏳ **Task 6**: Pellet collection and scoring  
-⏳ **Task 7**: Game state management  
-⏳ **Task 8**: Multiplayer WebSocket integration  
-⏳ **Task 9**: Genre-breaking modes  
-⏳ **Task 10**: AWS infrastructure deployment
+## Licence
 
-## Contributing
-
-This project follows component-based architecture with clear separation of concerns. See the [design document](.kiro/specs/maze-runner-game/design.md) for detailed technical specifications.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### MIT License Summary
-
-- ✅ Commercial use
-- ✅ Modification
-- ✅ Distribution
-- ✅ Private use
-- ❌ Liability
-- ❌ Warranty
+MIT — see [LICENSE](LICENSE).
