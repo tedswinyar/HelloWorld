@@ -14,6 +14,16 @@ npm run lint:fix   # Biome autofix
 
 `?seed=12345` in the URL replays an exact board. Every random source is seeded.
 
+## Git state is tracked outside this repo
+
+Current state and what's owed live in `HANDOFF.md`, mirrored on Specter card
+`8df7b4cb-cfc3-4460-800d-3057f583ba74`. **If you change what is committed, pushed, or merged
+here, update both.** The card asserts this repo's state and has no way to notice it has gone
+stale.
+
+Pushes are gated by Code Defender's external-repository allowlist. A refused push is policy,
+not a code problem — see `HANDOFF.md`.
+
 ## Non-negotiables
 
 These are the rules that keep the bugs this codebase used to have from coming
