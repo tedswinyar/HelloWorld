@@ -11,7 +11,13 @@ Transcript is 2.5 MB. **If context is the constraint, start fresh instead** — 
 needed is in this file plus `CLAUDE.md` and `docs/decisions/`. There is no beads tracker in
 this project.
 
-**Last updated:** 2026-09-21 · **Read this first:** the work is done, green, and **PUSHED to
+**Last updated:** 2026-10-15 · **Push path since 2026-10-15:** this repo is on the personal
+build-server relay model. `git push mbp master` goes to the relay, which forwards it to GitHub as
+`staging`; `.github/workflows/ci.yml` runs on the relay's self-hosted runner (label `HelloWorld`)
+and fast-forwards `master` on green. `origin`'s push URL is disabled. Nothing below about pushing
+from a build checkout or about Code Defender applies any more; it is kept as history.
+
+**State at 2026-09-21** · the work is done, green, and **PUSHED to
 GitHub on 2026-09-21** (master `6c4f54e` + tag `baseline-2025-kiro`, verified by `ls-remote`).
 The push went from the personal MBP's build checkout, per Ted's 2026-09-15 decision that pushes
 to his personal public repos go through the MBP rather than a Code Defender request (this

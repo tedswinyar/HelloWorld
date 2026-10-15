@@ -21,8 +21,10 @@ Current state and what's owed live in `HANDOFF.md`, mirrored on Specter card
 here, update both.** The card asserts this repo's state and has no way to notice it has gone
 stale.
 
-Pushes are gated by Code Defender's external-repository allowlist. A refused push is policy,
-not a code problem — see `HANDOFF.md`.
+Pushes go through a personal build-server relay, never to GitHub directly: `git push mbp master`
+lands on GitHub as `staging`, CI on the relay's self-hosted runner verifies it and fast-forwards
+`master` on green (`.github/workflows/ci.yml`). The `origin` push URL is disabled by design. The
+private runbook is `workstation` `docs/mbp-build-server.md`; see `HANDOFF.md` for state.
 
 ## Non-negotiables
 

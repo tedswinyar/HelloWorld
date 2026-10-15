@@ -1,49 +1,72 @@
 name: CI
 
+# Promotion-shape CI. The development machine never pushes to GitHub; it pushes
+# `master` to a relay on a personal build server, which forwards it here as
+# `staging`. This workflow verifies `staging` on that server's own self-hosted
+# runner (label: the repository name) and, on green, fast-forwards `master`.
+# Other branches are verified but never promoted.
+#
+# Push-only on purpose: no `pull_request` trigger, because the runner is a real
+# machine and a fork's pull request would run the fork's code on it. No hosted
+# runners (`ubuntu-latest` etc.) either; this account does not use them.
+
 on:
   push:
-    branches: [master, modernise-2026]
-  pull_request:
+    branches: [staging, "ci/**", "feature/**"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# One runner per repository: a superseded push cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  check:
-    name: Typecheck, lint and unit tests
-    runs-on: ubuntu-latest
+  verify:
+    name: Typecheck, lint, unit and browser tests
+    runs-on: [self-hosted, macOS, ARM64, HelloWorld]
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      # Pinned by SHA (actions/checkout v4.4.0). A tag can be moved; a SHA cannot.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          node-version: 24
-          cache: npm
+          persist-credentials: false
+
+      - name: Job PATH (the runner service does not read a login shell)
+        run: printf '%s\n' /opt/homebrew/bin >> "$GITHUB_PATH"
+
+      - name: Toolchain present
+        run: node --version && npm --version
+
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm run test:coverage
-      - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: coverage
-          path: coverage/
-          retention-days: 7
+      - run: npm test
 
-  e2e:
-    name: Browser tests
-    runs-on: ubuntu-latest
+      - name: Playwright browser (cached in the runner user's home after the first run)
+        run: npx playwright install chromium
+
+      - name: Browser tests
+        run: npm run e2e
+
+  promote:
+    name: fast-forward master
+    needs: verify
+    if: github.ref == 'refs/heads/staging'
+    permissions:
+      contents: write
+    runs-on: [self-hosted, macOS, ARM64, HelloWorld]
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run e2e
-      - name: Upload Playwright report
-        if: failure()
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+          fetch-depth: 0
+      - name: master := staging (fast-forward only)
+        # No --force: if master has moved in a way staging does not contain,
+        # that is a real divergence to look at, not something to paper over.
+        run: |
+          git fetch origin master || true
+          git push origin "HEAD:refs/heads/master"
+          echo "master is now $(git rev-parse --short HEAD)"
