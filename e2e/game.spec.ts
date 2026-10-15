@@ -121,21 +121,26 @@ test.describe("loading", () => {
   test("draws something other than an empty canvas", async ({ page }) => {
     await open(page);
 
-    const distinctColours = await page.evaluate(() => {
-      const canvas = document.querySelector<HTMLCanvasElement>("#board");
-      const ctx = canvas?.getContext("2d");
-      if (canvas === null || ctx === null || ctx === undefined) return 0;
+    const distinctColours = () =>
+      page.evaluate(() => {
+        const canvas = document.querySelector<HTMLCanvasElement>("#board");
+        const ctx = canvas?.getContext("2d");
+        if (canvas === null || ctx === null || ctx === undefined) return 0;
 
-      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const seen = new Set<string>();
-      for (let i = 0; i < data.length; i += 4 * 97) {
-        seen.add(`${data[i]},${data[i + 1]},${data[i + 2]}`);
-      }
-      return seen.size;
-    });
+        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const seen = new Set<string>();
+        for (let i = 0; i < data.length; i += 4 * 97) {
+          seen.add(`${data[i]},${data[i + 1]},${data[i + 2]}`);
+        }
+        return seen.size;
+      });
 
     // Walls, pellets, player and ghosts: several distinct colours, not one.
-    expect(distinctColours).toBeGreaterThan(3);
+    // `open` only waits for the game object, which exists before the first
+    // requestAnimationFrame paints; on a cold or headless machine a single
+    // sample can land on the still-cleared canvas. Poll until a frame has
+    // painted rather than racing it.
+    await expect.poll(distinctColours, { timeout: 5_000 }).toBeGreaterThan(3);
   });
 });
 
